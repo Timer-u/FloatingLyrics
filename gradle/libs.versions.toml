@@ -1,0 +1,107 @@
+[versions]
+agpVersion = "8.8.0"
+# test
+junit = "4.13.2"
+junitJupiterVersion = "5.8.1"
+junitVersion = "1.2.1"
+espressoCoreVersion = "3.6.1"
+
+coreKtxVersion = "1.15.0"
+# Compose
+activityComposeVersion = "1.9.3"
+composeBomVersion = "2024.12.01"
+# Kotlin
+kotlinVersion = "2.1.0"
+kspVersion = "2.1.0-1.0.29"
+# Apache Commons Text
+commonsTextVersion = "1.12.0"
+# LifeCycle
+lifecycleVersion = "2.8.7"
+# Accompanist
+accompanistSwiperefreshVersion = "0.36.0"
+# ConstraintLayout
+constraintlayoutComposeVersion = "1.1.0"
+constraintlayoutVersion = "2.2.0"
+# DocumentFile
+documentfile = "1.0.1"
+# LeakCanary
+leakcanaryAndroid = "2.14"
+# Navigation
+mockitoVersion = "5.12.0"
+navigationVersion = "2.8.5"
+# Livedata
+livedataVersion = "1.7.6"
+# Material
+materialVersion = "1.7.6"
+# NetWork
+roomVersion = "2.6.1"
+gsonVersion = "2.11.0"
+okhttp3Version = "4.12.0"
+coil = "3.0.2"
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtxVersion" }
+androidx-lifecycle-lifecycle-runtime-testing = { module = "androidx.lifecycle:lifecycle-runtime-testing", version.ref = "lifecycleVersion" }
+androidx-lifecycle-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleVersion" }
+androidx-lifecycle-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleVersion" }
+androidx-lifecycle-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleVersion" }
+androidx-lifecycle-lifecycle-livedata-core-ktx = { module = "androidx.lifecycle:lifecycle-livedata-core-ktx", version.ref = "lifecycleVersion" }
+androidx-lifecycle-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleVersion" }
+androidx-lifecycle-service = { module = "androidx.lifecycle:lifecycle-service", version.ref = "lifecycleVersion" }
+androidx-lifecycle-viewmodel-savedstate = { module = "androidx.lifecycle:lifecycle-viewmodel-savedstate", version.ref = "lifecycleVersion" }
+androidx-material = { module = "androidx.compose.material:material", version.ref = "materialVersion" }
+androidx-ui-viewbinding = { module = "androidx.compose.ui:ui-viewbinding" }
+
+commons-text = { module = "org.apache.commons:commons-text", version.ref = "commonsTextVersion" }
+google-accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefreshVersion" }
+constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintlayoutComposeVersion" }
+constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayoutVersion" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gsonVersion" }
+# Room
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomVersion" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomVersion" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomVersion" }
+com-google-devtools-ksp-gradle-plugin = { module = "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin", version.ref = "kspVersion" }
+androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "roomVersion" }
+
+# coil
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
+coil3-coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+
+androidx-documentfile = { module = "androidx.documentfile:documentfile", version.ref = "documentfile" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCoreVersion" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleVersion" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityComposeVersion" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBomVersion" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiterVersion" }
+leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanaryAndroid" }
+# Okhttp
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoVersion" }
+okhttp-bom = { module = "com.squareup.okhttp3:okhttp-bom", version.ref = "okhttp3Version" }
+squareup-okhttp = { module = "com.squareup.okhttp3:okhttp" }
+logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor" }
+mockwebserver = { module = "com.squareup.okhttp3:mockwebserver" }
+# LiveData
+runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "livedataVersion" }
+# Navigation
+navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "navigationVersion" }
+navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationVersion" }
+# Material Icons
+material-icons-core = { module = "androidx.compose.material:material-icons-core", version.ref = "materialVersion" }
+material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialVersion" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agpVersion" }
+jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinVersion" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }
+room = { id = "androidx.room", version.ref = "roomVersion" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlinVersion" }
