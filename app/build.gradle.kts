@@ -2,11 +2,11 @@ import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
-    alias(libs.plugins.androidApplication)
-    alias(libs.plugins.jetbrainsKotlinAndroid)
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.plugin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
-    alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.android)
 }
 
 room {
@@ -22,8 +22,8 @@ android {
         applicationId = "com.wzvideni.floatinglyrics"
         minSdk = 23
         targetSdk = 35
-        versionCode = 20241208
-        versionName = "20241208"
+        versionCode = 20250510
+        versionName = "20250510"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -114,44 +114,31 @@ android {
 
 dependencies {
 
-    // 视图绑定工具
-    implementation(libs.androidx.ui.viewbinding)
-
-    // Junit5
-    testImplementation(libs.junit.jupiter)
-
-    // Mockito
-    testImplementation(libs.mockito.core)
-
     // Apache Commons Text
     implementation(libs.commons.text)
 
     // LeakCanary
     debugImplementation(libs.leakcanary.android)
 
-    // DocumentFile
-    implementation(libs.androidx.documentfile)
+
+    // KSP
+    implementation(libs.google.devtools.ksp.gradle.plugin)
+
+    // Gson
+    implementation(libs.google.code.gson)
+
+    // LiveData
+    implementation(libs.androidx.compose.runtime.livedata)
 
     // Room
     implementation(libs.androidx.room.runtime)
-    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.ktx)
-    implementation(libs.com.google.devtools.ksp.gradle.plugin)
+    ksp(libs.androidx.room.compiler)
     testImplementation(libs.androidx.room.testing)
 
-    // NetWork
-    implementation(libs.coil3.coil.compose)
-    implementation(libs.coil.network.okhttp)
-    implementation(libs.gson)
-    // okhttp3
-    implementation(platform(libs.okhttp.bom))
-    implementation(libs.squareup.okhttp)
-    implementation(libs.logging.interceptor)
-    testImplementation(libs.mockwebserver)
-
-    // Icons
-    implementation(libs.material.icons.extended)
-    implementation(libs.material.icons.core)
+    // Coil3
+    implementation(libs.coil3.kt.compose)
+    implementation(libs.coil3.kt.okhttp)
 
     //Navigation
     implementation(libs.navigation.compose)
@@ -161,6 +148,20 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.constraintlayout.compose)
 
+    // Accompanist
+    implementation(libs.google.accompanist.swiperefresh)
+
+    // okhttp3
+    implementation(platform(libs.squareup.okhttp3.bom))
+    implementation(libs.squareup.okhttp3)
+    implementation(libs.squareup.logging.interceptor)
+    testImplementation(libs.squareup.mockwebserver)
+
+    // ComposeMaterial
+    implementation(libs.androidx.compose.material)
+    implementation(libs.androidx.compose.material.icons.core)
+    implementation(libs.androidx.compose.material.icons.extended)
+
     // LifeCycle
     implementation(libs.androidx.lifecycle.lifecycle.livedata.ktx)
     implementation(libs.androidx.lifecycle.lifecycle.livedata.core.ktx)
@@ -168,29 +169,30 @@ dependencies {
     implementation(libs.androidx.lifecycle.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.viewmodel.savedstate)
     implementation(libs.androidx.lifecycle.service)
+    implementation(libs.androidx.lifecycle.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.lifecycle.runtime.compose)
     testImplementation(libs.androidx.lifecycle.lifecycle.runtime.testing)
 
-    // Accompanist
-    implementation(libs.google.accompanist.swiperefresh)
+    // ComposeUi
+    implementation(libs.androidx.compose.ui.viewbinding)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 
-    implementation(libs.runtime.livedata)
-    implementation(libs.androidx.material)
-
-    // 初始依赖
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
+    // ComposeBom
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+
+    // Basic
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material3)
+
+    // Test
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
 }

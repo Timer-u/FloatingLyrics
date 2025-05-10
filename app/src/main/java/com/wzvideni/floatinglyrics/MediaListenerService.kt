@@ -3,7 +3,6 @@ package com.wzvideni.floatinglyrics
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.UriPermission
 import android.database.Cursor
 import android.media.MediaMetadata
 import android.media.MediaMetadataRetriever
@@ -14,11 +13,9 @@ import android.net.ConnectivityManager
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.service.notification.NotificationListenerService
 import android.widget.Toast
-import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.viewModelScope
 import com.wzvideni.floatinglyrics.network.buildLyricsList
 import com.wzvideni.floatinglyrics.network.model.Lyric
@@ -33,11 +30,16 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import java.io.OutputStream
 import java.util.Date
 import kotlin.math.abs
 
 class MediaListenerService : NotificationListenerService() {
+
+    val playingStateViewModel by lazy { MainApplication.instance.playingStateViewModel }
+    val sharedPreferencesViewModel by lazy { MainApplication.instance.sharedPreferencesViewModel }
 
     // 媒体会话管理器
     private lateinit var mediaSessionManager: MediaSessionManager
@@ -114,29 +116,25 @@ class MediaListenerService : NotificationListenerService() {
         activeSessions = mediaSessionManager.getActiveSessions(ComponentName(this, this.javaClass))
         // 判断是否存在媒体会话（媒体通知）
         if (activeSessions.isNotEmpty()) {
-            if (playingStateViewModel.persistedUriPermissionsList.value.isNotEmpty()) {
-                // 设置媒体监听状态为真
-                playingStateViewModel.setMediaListenerState(true)
-                if (!::mediaController.isInitialized) {
-                    // 从第一个会话创建媒体控制器（经测试第一个媒体会话就是正在播放的媒体会话）
-                    mediaController = MediaController(this, activeSessions[0].sessionToken)
-                    // 注册回调函数
-                    mediaController.registerCallback(mediaControllerCallback)
-                    // 获取歌词更新数据库
-                    lyricsUpdateDatabase = getLyricsDatabase(this)
-                    // 获取歌词更新访问对象
-                    lyricsUpdateDao = lyricsUpdateDatabase.lyricsUpdateDao()
-                    // 循环获取当前正在播放的音乐信息
-                    cycleGetPlayingMusicInfo()
-                } else if (!isFirstStart && !playingStateViewModel.isNotEmptyOfSearchKeyword()) {
-                    Toast.makeText(this, "设备配置变更！", Toast.LENGTH_SHORT).show()
-                    // 设备配置变更时需要重新获取媒体元数据
-                    isFirstStart = true
-                    // 循环获取当前正在播放的音乐信息
-                    cycleGetPlayingMusicInfo()
-                }
-            } else {
-                Toast.makeText(this, "请添加歌词保存目录！", Toast.LENGTH_SHORT).show()
+            // 设置媒体监听状态为真
+            playingStateViewModel.setMediaListenerState(true)
+            if (!::mediaController.isInitialized) {
+                // 从第一个会话创建媒体控制器（经测试第一个媒体会话就是正在播放的媒体会话）
+                mediaController = MediaController(this, activeSessions[0].sessionToken)
+                // 注册回调函数
+                mediaController.registerCallback(mediaControllerCallback)
+                // 获取歌词更新数据库
+                lyricsUpdateDatabase = getLyricsDatabase(this)
+                // 获取歌词更新访问对象
+                lyricsUpdateDao = lyricsUpdateDatabase.lyricsUpdateDao()
+                // 循环获取当前正在播放的音乐信息
+                cycleGetPlayingMusicInfo()
+            } else if (!isFirstStart && !playingStateViewModel.isNotEmptyOfSearchKeyword()) {
+                Toast.makeText(this, "设备配置变更！", Toast.LENGTH_SHORT).show()
+                // 设备配置变更时需要重新获取媒体元数据
+                isFirstStart = true
+                // 循环获取当前正在播放的音乐信息
+                cycleGetPlayingMusicInfo()
             }
         } else {
             Toast.makeText(this, "未发现媒体通知！", Toast.LENGTH_SHORT).show()
@@ -277,7 +275,7 @@ class MediaListenerService : NotificationListenerService() {
         // 纯音乐不读取本地歌词文件
         if (!title.contains("Instrumental", true) && !title.contains("纯音乐")) {
             // 判断网络是否连接并且自动搜索已打开
-            if (connectivityManager.activeNetwork != null && sharedPreferencesViewModel.isEnableAutoSearch.value) {
+            if (connectivityManager.activeNetwork != null && sharedPreferencesViewModel.enableAutoSearch.value) {
                 // 从数据库查询到的日期
                 val queryDate = lyricsUpdateDao.queryUpdateDate(title, album)
                 // 查找到的日期为0则数据库中不存在该歌曲信息，需要添加歌曲信息并重新搜索
@@ -519,92 +517,32 @@ class MediaListenerService : NotificationListenerService() {
     suspend fun saveLyricListToFile(lyricList: List<Lyric>): Boolean =
         withContext(Dispatchers.IO) {
             musicFile?.let { musicFile ->
-                // 拓展名正则表达式：表示匹配一个拓展名并且其后面跟着的是字符串末尾
-                val extensionRegex = Regex("${musicFile.extension}(?=$)")
-                val lrcFileName = musicFile.name.replaceFirst(extensionRegex, "lrc")
+                try {
+                    //待写入的内容
+                    var stringBuffer = StringBuilder()
 
-                //待写入的内容
-                var writeContent = ""
-
-                // 遍历歌词列表并写入歌词到文件
-                lyricList.forEach { lyrics: Lyric ->
-                    lyrics.lyricsList.forEach { lyric: String ->
-                        writeContent += "${lyrics.timeline}$lyric\n"
+                    // 遍历歌词列表并写入歌词到文件
+                    lyricList.forEach { lyrics: Lyric ->
+                        lyrics.lyricsList.forEach { lyric: String ->
+                            stringBuffer.append("${lyrics.timeline}$lyric\n")
+                        }
                     }
-                }
-
-                // 遍历已获取读写权限的目录的Uri列表
-                contentResolver.persistedUriPermissions.forEach { uriPermission: UriPermission ->
-                    // uriPermission.uri.pathSegments的数据样式如下：
-                    // [tree, 0DFA-180B:Music]
-                    // [tree, primary:Music]
-                    // 从这样的数据中提取卷和目录信息
-                    val splitList = uriPermission.uri.pathSegments[1].split(":")
-                    // 用正则表达式从绝对路径中匹配相对于被授予权限目录的相对路径
-                    val relativePath =
-                        Regex("(?<=${splitList[1]}/).+(?=/)").find(musicFile.absolutePath)?.value
-                    // 判断音频文件是否在已授予读写权限的目录中
-                    if ((musicFile.absolutePath.contains(splitList[0]) &&
-                                musicFile.absolutePath.contains(splitList[1])) ||
-                        (splitList[0] == "primary" &&
-                                musicFile.absolutePath.contains(splitList[1]))
-                    ) {
-                        // 查找目标文档对象
-                        DocumentFile.fromTreeUri(this@MediaListenerService, uriPermission.uri)
-                            ?.let {
-                                findDocumentFileByRelativePath(it, relativePath)
-                            }?.let { destinationDir ->
-                                // 删除旧文件
-                                destinationDir.findFile(lrcFileName)?.uri?.let {
-                                    DocumentsContract.deleteDocument(contentResolver, it)
-                                }
-                                // 创建新文件并写入内容
-                                DocumentsContract.createDocument(
-                                    contentResolver,
-                                    destinationDir.uri,
-                                    "application/lrc",
-                                    lrcFileName
-                                )?.let {
-                                    contentResolver.openOutputStream(it)
-                                        ?.use { outputStream: OutputStream ->
-                                            // 写入字节数组
-                                            outputStream.write(writeContent.toByteArray())
-                                        }
-                                }
-                            }
-                        return@withContext true
+                    val lyricFile = File(
+                        musicFile.parentFile,
+                        "${musicFile.nameWithoutExtension}.lrc"
+                    )
+                    FileOutputStream(lyricFile).use { outputStream: OutputStream ->
+                        outputStream.write(
+                            stringBuffer.toString().toByteArray()
+                        )
                     }
+                    return@withContext true
+                } catch (e: IOException) {
+                    e.printStackTrace()
                 }
             }
             return@withContext false
         }
-
-    // 用相对路径查找目标文档对象
-    private fun findDocumentFileByRelativePath(
-        baseDir: DocumentFile?,
-        relativePath: String?,
-    ): DocumentFile? {
-        // 如果相对路径为空，则直接返回基础目录
-        if (relativePath == null) {
-            return baseDir
-        }
-
-        // 将相对路径按 '/' 分割
-        val pathSegments = relativePath.split('/')
-
-        // 遍历路径分段
-        var currentDir = baseDir
-        for (segment in pathSegments) {
-            // 寻找当前目录下的子目录
-            currentDir = currentDir?.listFiles()?.find { it.isDirectory && it.name == segment }
-
-            // 如果子目录不存在，则返回 null
-            if (currentDir == null) {
-                return null
-            }
-        }
-        return currentDir
-    }
 
     // 把字符串按文件名不允许出现的字符串分割
     private fun splitStringByIllegalCharacters(input: String): List<String> {

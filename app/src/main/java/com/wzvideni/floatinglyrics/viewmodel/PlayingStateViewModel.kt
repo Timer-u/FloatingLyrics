@@ -1,21 +1,22 @@
 package com.wzvideni.floatinglyrics.viewmodel
 
-import android.content.UriPermission
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wzvideni.floatinglyrics.MainApplication
 import com.wzvideni.floatinglyrics.network.model.Lyric
 import com.wzvideni.floatinglyrics.network.model.MusicInfo
 import com.wzvideni.floatinglyrics.network.qqMusicLyricRequest
 import com.wzvideni.floatinglyrics.network.qqMusicSearch
 import com.wzvideni.floatinglyrics.network.wyyMusicLyricRequest
 import com.wzvideni.floatinglyrics.network.wyyMusicSearch
-import com.wzvideni.floatinglyrics.sharedPreferencesViewModel
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
 
 class PlayingStateViewModel : ViewModel() {
+
+    val sharedPreferencesViewModel by lazy { MainApplication.instance.sharedPreferencesViewModel }
 
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query
@@ -102,12 +103,6 @@ class PlayingStateViewModel : ViewModel() {
         _lyricIndex.value = lyricIndex
     }
 
-    // 持久化Uri权限列表
-    private val _persistedUriPermissionsList = MutableStateFlow(emptyList<UriPermission>())
-    val persistedUriPermissionsList: StateFlow<List<UriPermission>> = _persistedUriPermissionsList
-    fun setPersistedUriPermissionsList(persistedUriPermissionsList: List<UriPermission>) {
-        _persistedUriPermissionsList.value = persistedUriPermissionsList
-    }
 
     // 媒体监听状态，用于启动和停止媒体监听
     private val _mediaListenerState = MutableStateFlow(false)

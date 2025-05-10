@@ -5,6 +5,7 @@ import android.app.DownloadManager
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
@@ -21,14 +22,21 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 
-class UpdateViewModel(private val versionCode: Long, private val application: Application) :
-    AndroidViewModel(application) {
+class UpdateViewModel(private val application: Application) : AndroidViewModel(application) {
 
     private val connectivityManager =
         application.getSystemService(Application.CONNECTIVITY_SERVICE) as ConnectivityManager
 
+    // 应用版本号
+    private var versionCode: Long = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        application.packageManager.getPackageInfo(application.packageName, 0).longVersionCode
+    } else {
+        @Suppress("DEPRECATION")
+        application.packageManager.getPackageInfo(application.packageName, 0).versionCode.toLong()
+    }
+
     var downloadId = 1L
-    var _lanZouFile = MutableStateFlow<LanZouFile?>(null)
+    private var _lanZouFile = MutableStateFlow<LanZouFile?>(null)
     val lanZouFile: StateFlow<LanZouFile?> = _lanZouFile
 
     private val _isLatest = MutableStateFlow(true)

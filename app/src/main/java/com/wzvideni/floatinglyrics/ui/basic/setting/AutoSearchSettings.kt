@@ -15,18 +15,19 @@ import com.wzvideni.floatinglyrics.ui.basic.CenterVerticallyRow
 import com.wzvideni.floatinglyrics.ui.basic.FullSpacer
 
 @Composable
-inline fun AutoSearchLyrics(
-    isEnableState: Boolean,
+inline fun RadioSwitch(
+    title: String,
+    enableState: Boolean,
     crossinline onCheckedChange: (Boolean) -> Unit,
 ) {
     CenterVerticallyRow {
         Text(
-            text = "自动搜索歌词",
+            text = title,
             modifier = Modifier.padding(start = 10.dp)
         )
         FullSpacer()
         Switch(
-            checked = isEnableState,
+            checked = enableState,
             onCheckedChange = { onCheckedChange(it) },
             modifier = Modifier.padding(end = 10.dp)
         )

@@ -1,11 +1,9 @@
 package com.wzvideni.floatinglyrics.ui.page
 
-import android.net.Uri
 import android.widget.TextView
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,32 +30,27 @@ import com.wzvideni.floatinglyrics.ui.basic.PrimaryText
 import com.wzvideni.floatinglyrics.ui.basic.Separate
 import com.wzvideni.floatinglyrics.ui.basic.TextSizeSlider
 import com.wzvideni.floatinglyrics.ui.basic.TitleText
-import com.wzvideni.floatinglyrics.ui.basic.setting.AutoSearchLyrics
 import com.wzvideni.floatinglyrics.ui.basic.setting.AutoSearchPriority
 import com.wzvideni.floatinglyrics.ui.basic.setting.ColorPicker
 import com.wzvideni.floatinglyrics.ui.basic.setting.HorizontalLyricsGravitySettingButton
-import com.wzvideni.floatinglyrics.ui.basic.setting.LyricsFileSavePath
 import com.wzvideni.floatinglyrics.ui.basic.setting.LyricsLocatedSettingButton
+import com.wzvideni.floatinglyrics.ui.basic.setting.RadioSwitch
 import com.wzvideni.floatinglyrics.ui.basic.setting.SettingWithDoubleArrow
 import com.wzvideni.floatinglyrics.ui.basic.setting.TypefaceSetting
 import com.wzvideni.floatinglyrics.ui.basic.setting.VerticalLyricsGravitySettingButton
 import com.wzvideni.floatinglyrics.utils.view.OnTouchView
-import com.wzvideni.floatinglyrics.viewmodel.PlayingStateViewModel
 import com.wzvideni.floatinglyrics.viewmodel.SharedPreferencesViewModel
 
 // 设置页面
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-inline fun SettingPage(
-    playingStateViewModel: PlayingStateViewModel,
+fun SettingPage(
     sharedPreferencesViewModel: SharedPreferencesViewModel,
     horizontalLyricsTextView: TextView,
     horizontalTranslationTextView: TextView,
     verticalLyricsTextView: TextView,
     verticalTranslationTextView: TextView,
-    crossinline onClickToRemovePath: (uri: Uri) -> Unit,
-    crossinline onClickToAddPath: () -> Unit,
-    crossinline onClickToUnlockFloatingView: () -> Unit,
+    onClickToUnlockFloatingView: () -> Unit,
 ) {
     val context = LocalContext.current
     val locatedState by sharedPreferencesViewModel.located.collectAsState()
@@ -65,7 +58,7 @@ inline fun SettingPage(
     val horizontalGravityState by sharedPreferencesViewModel.horizontalGravity.collectAsState()
 
     // 自动搜索状态
-    val isEnableAutoSearchState by sharedPreferencesViewModel.isEnableAutoSearch.collectAsState()
+    val enableAutoSearchState by sharedPreferencesViewModel.enableAutoSearch.collectAsState()
     val intervalDaysState by sharedPreferencesViewModel.intervalDays.collectAsState()
     val isQQMusicPriorityState by sharedPreferencesViewModel.isQQMusicIsPriority.collectAsState()
 
@@ -84,7 +77,6 @@ inline fun SettingPage(
     // 垂直滚动状态
     val verticalScrollState = rememberScrollState()
     // 持久化Uri权限列表
-    val persistedUriPermissionsListState by playingStateViewModel.persistedUriPermissionsList.collectAsState()
     // 主题状态
     val themeState by sharedPreferencesViewModel.currentTheme.collectAsState()
 
@@ -107,24 +99,13 @@ inline fun SettingPage(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(verticalScrollState),
-            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            TitleText("歌词文件保存目录：")
-            // 歌词文件保存路径
-            LyricsFileSavePath(
-                persistedUriPermissionsListState,
-                onClickToRemovePath = { uri: Uri ->
-                    onClickToRemovePath(uri)
-                },
-                onClickToAddPath = { onClickToAddPath() }
-            )
-            Separate()
 
             TitleText("自动搜索设置：")
             // 自动搜索歌词开关
-            AutoSearchLyrics(isEnableAutoSearchState) {
-                sharedPreferencesViewModel.setIsEnable(it)
+            RadioSwitch(title = "自动搜索歌词", enableState = enableAutoSearchState) {
+                sharedPreferencesViewModel.setEnableAutoSearch(it)
             }
             // 自动搜索间隔天数
             SettingWithDoubleArrow(
@@ -239,6 +220,8 @@ inline fun SettingPage(
             )
             Separate()
 
+
+
             TitleText("悬浮歌词显示设置：")
             Row {
                 // 悬浮歌词位置设置按钮
@@ -270,9 +253,13 @@ inline fun SettingPage(
                         ).show()
                     },
                     onLongClick = {
-                        Toast.makeText(context, "已重置歌词和翻译位置", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "已重置歌词和翻译位置", Toast.LENGTH_SHORT)
+                            .show()
                         OnTouchView.restoreInitialPosition(context, horizontalLyricsTextView)
-                        OnTouchView.restoreInitialPosition(context, horizontalTranslationTextView)
+                        OnTouchView.restoreInitialPosition(
+                            context,
+                            horizontalTranslationTextView
+                        )
                         OnTouchView.restoreInitialPosition(context, verticalLyricsTextView)
                         OnTouchView.restoreInitialPosition(context, verticalTranslationTextView)
                     }

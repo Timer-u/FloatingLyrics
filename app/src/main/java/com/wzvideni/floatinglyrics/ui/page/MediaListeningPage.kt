@@ -30,13 +30,13 @@ import com.wzvideni.floatinglyrics.viewmodel.UpdateViewModel
 // 媒体监听页面
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-inline fun MediaListeningPage(
+fun MediaListeningPage(
     playingStateViewModel: PlayingStateViewModel,
     updateViewModel: UpdateViewModel,
-    crossinline addView: () -> Unit,
-    crossinline onClickTopIcon: () -> Unit,
-    crossinline onClickToListen: () -> Unit,
-    crossinline onClickToFinish: () -> Unit,
+    addView: () -> Unit,
+    onClickTopIcon: () -> Unit,
+    onClickToListen: () -> Unit,
+    onClickToFinish: () -> Unit,
 ) {
     val musicPathState by playingStateViewModel.musicPath.collectAsState()
     val lrcPathState by playingStateViewModel.lyricsPath.collectAsState()

@@ -1,7 +1,7 @@
 package com.wzvideni.floatinglyrics.network
 
+import com.wzvideni.floatinglyrics.MainApplication
 import com.wzvideni.floatinglyrics.network.model.Lyric
-import com.wzvideni.floatinglyrics.sharedPreferencesViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
@@ -67,7 +67,7 @@ suspend fun buildLyricsList(
                 // 获取中间索引歌词
                 midLyric = lyricsList[midIndex]
                 // 判断时间轴差是否在指定的范围内（某些歌词和翻译的时间轴对应不上，差几毫秒）
-                if (abs(millisecond - midLyric.millisecond) <= sharedPreferencesViewModel.timelineDifference.value) {
+                if (abs(millisecond - midLyric.millisecond) <= MainApplication.instance.sharedPreferencesViewModel.timelineDifference.value) {
                     // 清空同时间轴多余歌词（QQ音乐有些歌曲刚开始的词曲信息和头一句歌词用同一个时间轴）
                     if (midLyric.lyricsList.size == 2) {
                         midLyric.lyricsList.clear()

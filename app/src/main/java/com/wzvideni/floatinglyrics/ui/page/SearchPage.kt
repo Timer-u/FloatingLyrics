@@ -25,29 +25,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.wzvideni.floatinglyrics.playingStateViewModel
 import com.wzvideni.floatinglyrics.ui.basic.PrimaryIcon
 import com.wzvideni.floatinglyrics.ui.basic.PrimaryText
 import com.wzvideni.floatinglyrics.ui.basic.search.QQMusicSearchItem
 import com.wzvideni.floatinglyrics.ui.basic.search.WyyMusicSearchItem
+import com.wzvideni.floatinglyrics.viewmodel.PlayingStateViewModel
 
 // 搜索页面
 @OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
 @Composable
-inline fun SearchPage(
+fun SearchPage(
+    playingStateViewModel: PlayingStateViewModel,
     isRefreshing: Boolean,
-    crossinline onRefresh: () -> Unit,
-    crossinline onClickToRequestQQMusicLyric: (String) -> Unit,
-    crossinline onClickToRequestWyyMusicLyric: (String) -> Unit,
+    onRefresh: () -> Unit,
+    onClickToRequestQQMusicLyric: (String) -> Unit,
+    onClickToRequestWyyMusicLyric: (String) -> Unit,
 ) {
 
     val qqMusicSearchResultList by playingStateViewModel.qqMusicSearchResultList.collectAsState()
 
     val wyyMusicSearchResultList by playingStateViewModel.wyyMusicSearchResultList.collectAsState()
 
-    val onRefresh = {
-        onRefresh()
-    }
+
     val pullRefreshState =
         rememberPullRefreshState(refreshing = isRefreshing, onRefresh = { onRefresh() })
 

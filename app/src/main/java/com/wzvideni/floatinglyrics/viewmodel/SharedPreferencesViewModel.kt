@@ -32,12 +32,14 @@ class SharedPreferencesViewModel(application: Application) : AndroidViewModel(ap
     private val _currentTheme = MutableStateFlow<Themes>(Themes.System)
     val currentTheme: StateFlow<Themes> = _currentTheme
 
-    private val _isEnableAutoSearch = MutableStateFlow(true)
-    val isEnableAutoSearch: StateFlow<Boolean> = _isEnableAutoSearch
-    fun setIsEnable(isEnable: Boolean) {
-        _isEnableAutoSearch.value = isEnable
+    // 是否启动自动搜索
+    private val _enableAutoSearch = MutableStateFlow(true)
+    val enableAutoSearch: StateFlow<Boolean> = _enableAutoSearch
+    fun setEnableAutoSearch(enable: Boolean) {
+        _enableAutoSearch.value = enable
     }
 
+    // 自动搜索间隔天数
     private val _intervalDays = MutableStateFlow(7)
     val intervalDays: StateFlow<Int> = _intervalDays
     fun intervalDaysPlusOne() {
@@ -52,12 +54,14 @@ class SharedPreferencesViewModel(application: Application) : AndroidViewModel(ap
         _intervalDays.value = 7
     }
 
+    // 是否优先使用QQ音乐
     private val _isQQMusicPriority = MutableStateFlow(true)
     val isQQMusicIsPriority: StateFlow<Boolean> = _isQQMusicPriority
     fun isQQMusicPriorityNot() {
         _isQQMusicPriority.value = !_isQQMusicPriority.value
     }
 
+    // 歌词文字大小
     private val _lyricsTextSize = MutableStateFlow(15.454546f)
     val lyricsTextSize: StateFlow<Float> = _lyricsTextSize
 
@@ -65,36 +69,42 @@ class SharedPreferencesViewModel(application: Application) : AndroidViewModel(ap
         _lyricsTextSize.value = lyricsTextSize
     }
 
+    // 翻译文字大小
     private val _translationTextSize = MutableStateFlow(14.545454f)
     val translationTextSize: StateFlow<Float> = _translationTextSize
     fun setTranslationTextSize(translationTextSize: Float) {
         _translationTextSize.value = translationTextSize
     }
 
+    // 歌词文字颜色
     private val _lyricsTextColor = MutableStateFlow(Color.Red.toArgb())
     val lyricsTextColor: StateFlow<Int> = _lyricsTextColor
     fun setLyricsTextColor(lyricsTextColor: Int) {
         _lyricsTextColor.value = lyricsTextColor
     }
 
+    // 翻译文字颜色
     private val _translationTextColor = MutableStateFlow(Color.Cyan.toArgb())
     val translationTextColor: StateFlow<Int> = _translationTextColor
     fun setTranslationTextColor(translationTextColor: Int) {
         _translationTextColor.value = translationTextColor
     }
 
+    // 歌词字体样式
     private val _lyricsTypeface = MutableStateFlow(Typeface.NORMAL)
     val lyricsTypeface: StateFlow<Int> = _lyricsTypeface
     fun setLyricsTypeface(lyricsTypeface: Int) {
         _lyricsTypeface.value = lyricsTypeface
     }
 
+    // 翻译字体样式
     private val _translationTypeface = MutableStateFlow(Typeface.NORMAL)
     val translationTypeface: StateFlow<Int> = _translationTypeface
     fun setTranslationTypeface(translationTypeface: Int) {
         _translationTypeface.value = translationTypeface
     }
 
+    // 时间轴差值
     private val _timelineDifference = MutableStateFlow(0)
     val timelineDifference: StateFlow<Int> = _timelineDifference
     fun timelineDifferencePlusOne() {
@@ -109,7 +119,7 @@ class SharedPreferencesViewModel(application: Application) : AndroidViewModel(ap
         _timelineDifference.value = 0
     }
 
-
+    // 歌词延迟
     private val _lyricsDelay = MutableStateFlow(0L)
     val lyricsDelay: StateFlow<Long> = _lyricsDelay
     fun lyricsDelayPlusOne() {
@@ -124,6 +134,7 @@ class SharedPreferencesViewModel(application: Application) : AndroidViewModel(ap
         _lyricsDelay.value = 0
     }
 
+    // 查找当前歌词的延迟
     private val _findCurrentLyricsDelay = MutableStateFlow(200L)
     val findCurrentLyricsDelay: StateFlow<Long> = _findCurrentLyricsDelay
     fun findCurrentLyricsDelayPlusOne() {
@@ -138,24 +149,26 @@ class SharedPreferencesViewModel(application: Application) : AndroidViewModel(ap
         _findCurrentLyricsDelay.value = 200
     }
 
+    // 歌词定位
     private val _located = MutableStateFlow(Located.Horizontal)
     val located: StateFlow<Located> = _located
     fun setLocated(located: Located) {
         _located.value = located
     }
 
+    // 歌词垂直对齐方式
     private val _verticalGravity = MutableStateFlow(VerticalGravity.Center)
     val verticalGravity: StateFlow<VerticalGravity> = _verticalGravity
     fun setVerticalGravity(verticalGravity: VerticalGravity) {
         _verticalGravity.value = verticalGravity
     }
 
+    // 歌词水平对齐方式
     private val _horizontalGravity = MutableStateFlow(HorizontalGravity.Center)
     val horizontalGravity: StateFlow<HorizontalGravity> = _horizontalGravity
     fun setHorizontalGravity(horizontalGravity: HorizontalGravity) {
         _horizontalGravity.value = horizontalGravity
     }
-
 
     // 初始化加载SharedPreferences配置的设置
     init {
@@ -174,8 +187,8 @@ class SharedPreferencesViewModel(application: Application) : AndroidViewModel(ap
                 _translationTypeface.value =
                     getInt("TranslationTypeface", _translationTypeface.value)
                 // 自动搜索设置
-                _isEnableAutoSearch.value =
-                    getBoolean("IsEnableAutoSearch", _isEnableAutoSearch.value)
+                _enableAutoSearch.value =
+                    getBoolean("IsEnableAutoSearch", _enableAutoSearch.value)
                 _intervalDays.value =
                     getInt("IntervalDays", _intervalDays.value)
                 _isQQMusicPriority.value =
@@ -226,10 +239,8 @@ class SharedPreferencesViewModel(application: Application) : AndroidViewModel(ap
         viewModelScope.launch(Dispatchers.IO) {
             // 要是需要在onDestroy()里面强制停止应用程序的话，需要把配置保存操作提前到onStop()方法，不然配置无法被保存
             sharedPreferences.edit {
-
                 // 当前主题
                 putString("CurrentTheme", _currentTheme.value.theme)
-
                 // 字体样式设置
                 putFloat("LyricsTextSize", _lyricsTextSize.value)
                 putFloat("TranslationTextSize", _translationTextSize.value)
@@ -238,7 +249,7 @@ class SharedPreferencesViewModel(application: Application) : AndroidViewModel(ap
                 putInt("lyricsTypeface", _lyricsTypeface.value)
                 putInt("TranslationTypeface", _translationTypeface.value)
                 // 自动搜索设置
-                putBoolean("IsEnableAutoSearch", _isEnableAutoSearch.value)
+                putBoolean("IsEnableAutoSearch", _enableAutoSearch.value)
                 putInt("IntervalDays", _intervalDays.value)
                 putBoolean("IsQQMusicPriority", _isQQMusicPriority.value)
                 // 歌词显示设置
@@ -253,13 +264,15 @@ class SharedPreferencesViewModel(application: Application) : AndroidViewModel(ap
         }
     }
 
-    // 设置悬浮歌词字体样式
-    fun setFloatingLyricsTypeStyle(
+    // 初始化悬浮歌词
+    fun initFloatingLyrics(
         horizontalLyricsTextView: TextView,
         horizontalTranslationTextView: TextView,
         verticalLyricsTextView: TextView,
         verticalTranslationTextView: TextView,
     ) {
+
+
         // 歌词TextView字体大小
         horizontalLyricsTextView.textSize = _lyricsTextSize.value
         verticalLyricsTextView.textSize = _lyricsTextSize.value
@@ -276,7 +289,10 @@ class SharedPreferencesViewModel(application: Application) : AndroidViewModel(ap
         horizontalLyricsTextView.setTypeface(Typeface.SANS_SERIF, _lyricsTypeface.value)
         verticalLyricsTextView.setTypeface(Typeface.SANS_SERIF, _lyricsTypeface.value)
         // 翻译TextView字体粗细
-        horizontalTranslationTextView.setTypeface(Typeface.SANS_SERIF, _translationTypeface.value)
+        horizontalTranslationTextView.setTypeface(
+            Typeface.SANS_SERIF,
+            _translationTypeface.value
+        )
         verticalTranslationTextView.setTypeface(Typeface.SANS_SERIF, _translationTypeface.value)
 
         // 水平和垂直歌词显示
@@ -298,6 +314,7 @@ class SharedPreferencesViewModel(application: Application) : AndroidViewModel(ap
             horizontalLyricsTextView = horizontalLyricsTextView,
             horizontalTranslationTextView = horizontalTranslationTextView
         )
+
     }
 
     override fun onCleared() {

@@ -4,8 +4,6 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.net.ConnectivityManager
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.view.LayoutInflater
@@ -14,9 +12,10 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -46,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -65,33 +63,17 @@ import com.wzvideni.floatinglyrics.ui.page.SearchPage
 import com.wzvideni.floatinglyrics.ui.page.SettingPage
 import com.wzvideni.floatinglyrics.ui.theme.FloatingLyricsTheme
 import com.wzvideni.floatinglyrics.utils.expansion.navigateTo
-import com.wzvideni.floatinglyrics.utils.expansion.openDocumentTreeActivityResultLauncher
-import com.wzvideni.floatinglyrics.utils.expansion.persistableUriPermissionModeFlags
 import com.wzvideni.floatinglyrics.utils.expansion.requestCustomPermissions
-import com.wzvideni.floatinglyrics.utils.expansion.requestReadMusicPermissionLauncher
 import com.wzvideni.floatinglyrics.utils.view.OnTouchView
 import com.wzvideni.floatinglyrics.utils.view.addLockedFloatingView
 import com.wzvideni.floatinglyrics.utils.view.updateLockedFloatingViewLayout
 import com.wzvideni.floatinglyrics.utils.view.updateUnLockedFloatingViewLayout
-import com.wzvideni.floatinglyrics.viewmodel.PlayingStateViewModel
-import com.wzvideni.floatinglyrics.viewmodel.SharedPreferencesViewModel
-import com.wzvideni.floatinglyrics.viewmodel.SharedPreferencesViewModelFactory
-import com.wzvideni.floatinglyrics.viewmodel.UpdateViewModel
-import com.wzvideni.floatinglyrics.viewmodel.UpdateViewModelFactory
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
-// 播放状态的ViewModel
-lateinit var playingStateViewModel: PlayingStateViewModel
-
-// SharedPreferences配置的设置的ViewModel
-lateinit var sharedPreferencesViewModel: SharedPreferencesViewModel
-
-// 检查更新的ViewModel
-lateinit var updateViewModel: UpdateViewModel
-
 class MainActivity : ComponentActivity() {
+
     // 网络连接管理器
     private lateinit var connectivityManager: ConnectivityManager
 
@@ -99,6 +81,10 @@ class MainActivity : ComponentActivity() {
     private lateinit var mediaListenerBinder: MediaListenerService.MediaListenerBinder
     private lateinit var mediaListenerService: MediaListenerService
     private lateinit var mediaListenerIntent: Intent
+
+    val playingStateViewModel by lazy { MainApplication.instance.playingStateViewModel }
+    val sharedPreferencesViewModel by lazy { MainApplication.instance.sharedPreferencesViewModel }
+    val updateViewModel by lazy { MainApplication.instance.updateViewModel }
 
     // 服务是否绑定
     private var isBound = false
@@ -118,6 +104,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
     // 浮动歌词视图
     private lateinit var floatingLyricsView: View
 
@@ -132,16 +119,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var verticalLyricsTextView: TextView
     private lateinit var verticalTranslationTextView: TextView
 
-    // 打开文档树启动器回调（只能在onCreate()方法内注册）
-    private lateinit var openDocumentTree: ActivityResultLauncher<Uri?>
-
-    // 权限请求启动器回调（只能在onCreate()方法内注册）
-    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 
     private lateinit var onBackPressedCallback: OnBackPressedCallback
-
-    // 应用版本号
-    private var versionCode: Long = 0
 
     override fun onStop() {
         super.onStop()
@@ -164,9 +143,7 @@ class MainActivity : ComponentActivity() {
             windowManager.removeView(floatingLyricsView)
         }
 
-        // 注销旧回调
-        openDocumentTree.unregister()
-        requestPermissionLauncher.unregister()
+
         onBackPressedCallback.remove()
         // 解绑服务
         unbindService(connection)
@@ -181,7 +158,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         // 初始化视图和变量
         initializeViewAndVariable()
+
         setContent {
+            val activityResultLauncher =
+                rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+
+                }
             // 初始化ViewModel
             InitializeViewModel()
             val themeState by sharedPreferencesViewModel.currentTheme.collectAsState()
@@ -274,9 +256,10 @@ class MainActivity : ComponentActivity() {
                                     // 如果使用视图所附加到的窗口的唯一标记：windowToken，则会出现导致因重复添加视图而崩溃的情况
                                     if (floatingLyricsView.parent == null) {
                                         windowManager.addLockedFloatingView(floatingLyricsView)
+
                                     }
                                     // 设置悬浮歌词字体样式
-                                    sharedPreferencesViewModel.setFloatingLyricsTypeStyle(
+                                    sharedPreferencesViewModel.initFloatingLyrics(
                                         horizontalLyricsTextView,
                                         horizontalTranslationTextView,
                                         verticalLyricsTextView,
@@ -291,7 +274,14 @@ class MainActivity : ComponentActivity() {
                                     ).show()
                                 },
                                 onClickToListen = {
-                                    requestCustomPermissions(requestPermissionLauncher)
+                                    requestCustomPermissions {
+                                        // 检索标识此视图所附加到的窗口的唯一标记为空时才添加悬浮窗，防止重复添加
+                                        if (floatingLyricsView.windowToken == null) {
+                                            windowManager.addLockedFloatingView(floatingLyricsView)
+                                        }
+                                        // 启动媒体监听服务
+                                        startService(mediaListenerIntent)
+                                    }
                                 },
                                 onClickToFinish = {
                                     // 执行销毁操作
@@ -313,12 +303,6 @@ class MainActivity : ComponentActivity() {
                                                 "保存歌词失败：系统媒体数据库未更新",
                                                 Toast.LENGTH_SHORT
                                             ).show()
-                                        } else if (playingStateViewModel.persistedUriPermissionsList.value.isEmpty()) {
-                                            Toast.makeText(
-                                                this@MainActivity,
-                                                "保存歌词失败：请添加歌词保存目录",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
                                         }
                                     } else {
                                         Toast.makeText(
@@ -336,6 +320,7 @@ class MainActivity : ComponentActivity() {
                             var isRefreshing by remember { mutableStateOf(false) }
 
                             SearchPage(
+                                playingStateViewModel = playingStateViewModel,
                                 isRefreshing = isRefreshing,
                                 onRefresh = {
                                     // 获取活动的网络信息并判断是否为空，为空则没有网络连接
@@ -405,24 +390,12 @@ class MainActivity : ComponentActivity() {
                         // 设置页面
                         composable(Pages.Setting.route) {
                             SettingPage(
-                                playingStateViewModel = playingStateViewModel,
                                 sharedPreferencesViewModel = sharedPreferencesViewModel,
                                 horizontalLyricsTextView = horizontalLyricsTextView,
                                 horizontalTranslationTextView = horizontalTranslationTextView,
                                 verticalLyricsTextView = verticalLyricsTextView,
                                 verticalTranslationTextView = verticalTranslationTextView,
-                                onClickToRemovePath = { uri: Uri ->
-                                    revokeUriPermission(
-                                        uri,
-                                        persistableUriPermissionModeFlags
-                                    )
-                                    playingStateViewModel.setPersistedUriPermissionsList(
-                                        contentResolver.persistedUriPermissions
-                                    )
-                                },
-                                onClickToAddPath = {
-                                    openDocumentTree.launch(null)
-                                },
+
                                 onClickToUnlockFloatingView = {
                                     windowManager.updateUnLockedFloatingViewLayout(
                                         floatingLyricsView
@@ -445,14 +418,17 @@ class MainActivity : ComponentActivity() {
     private fun initializeViewAndVariable() {
         // 使用数据绑定工具填充悬浮歌词视图并获取视图和控件
         // 填充浮动歌词视图（android.R.id.content提供了视图的根布局，是一个FrameLayout）
+
         DataBindingUtil.inflate<LayoutFloatingLyricsBinding>(
             getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater,
             R.layout.layout_floating_lyrics,
             findViewById(android.R.id.content),
             false
         ).apply {
+
             // 获取悬浮歌词视图
             floatingLyricsView = root
+
             // 获取悬浮歌词约束布局
             floatingLyricsConstraintLayout = FloatingLyricsConstraintLayout
             // 获取水平歌词和翻译TextView
@@ -461,6 +437,7 @@ class MainActivity : ComponentActivity() {
             // 获取垂直歌词和翻译TextView
             verticalLyricsTextView = VerticalLyricsTextView
             verticalTranslationTextView = VerticalTranslationTextView
+
         }
 
         // 水平文字跑马灯设置单行
@@ -476,11 +453,12 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(this, "悬浮歌词已锁定", Toast.LENGTH_SHORT).show()
         }
 
-        // 为TextView设置拖动事件监听器
+        // 设置拖动事件监听器
         OnTouchView.registerDragListener(this, horizontalLyricsTextView)
         OnTouchView.registerDragListener(this, horizontalTranslationTextView)
         OnTouchView.registerDragListener(this, verticalLyricsTextView)
         OnTouchView.registerDragListener(this, verticalTranslationTextView)
+
 
         // 获取网络连接管理器实例
         connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -490,18 +468,6 @@ class MainActivity : ComponentActivity() {
         // 绑定服务
         bindService(mediaListenerIntent, connection, BIND_AUTO_CREATE)
 
-        // 注册openDocumentTree回调（只能在onCreate()方法内注册）
-        openDocumentTree = openDocumentTreeActivityResultLauncher()
-
-        // 注册请求读取音乐权限回调（只能在onCreate()方法内注册）
-        requestPermissionLauncher = requestReadMusicPermissionLauncher {
-            // 检索标识此视图所附加到的窗口的唯一标记为空时才添加悬浮窗，防止重复添加
-            if (floatingLyricsView.windowToken == null) {
-                windowManager.addLockedFloatingView(floatingLyricsView)
-            }
-            // 启动媒体监听服务
-            startService(mediaListenerIntent)
-        }
 
         // 获取返回手势回调
         onBackPressedCallback = object : OnBackPressedCallback(true) {
@@ -517,21 +483,11 @@ class MainActivity : ComponentActivity() {
         }
         // 注册返回手势回调
         onBackPressedDispatcher.addCallback(this, onBackPressedCallback)
-        // 获取应用版本号
-        versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            packageManager.getPackageInfo(this.packageName, 0).longVersionCode
-        } else {
-            @Suppress("DEPRECATION")
-            packageManager.getPackageInfo(this.packageName, 0).versionCode.toLong()
-        }
+
     }
 
     @Composable
     fun InitializeViewModel() {
-        // 播放状态的ViewModel
-        playingStateViewModel = viewModel()
-        playingStateViewModel.setPersistedUriPermissionsList(contentResolver.persistedUriPermissions)
-
         // 收集流的值设置TextView的文本
         LaunchedEffect(Unit) {
             playingStateViewModel.lyric.collect { lyric ->
@@ -546,12 +502,5 @@ class MainActivity : ComponentActivity() {
                 verticalTranslationTextView.text = translation
             }
         }
-
-        // 检查更新的ViewModel
-        updateViewModel = viewModel(factory = UpdateViewModelFactory(versionCode, application))
-
-        // SharedPreferences配置的设置的ViewModel
-        sharedPreferencesViewModel =
-            viewModel(factory = SharedPreferencesViewModelFactory(application))
     }
 }

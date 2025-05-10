@@ -14,6 +14,8 @@ import java.io.File
 
 class DownloadReceiver : BroadcastReceiver() {
 
+    val updateViewModel by lazy { MainApplication.instance.updateViewModel }
+
     override fun onReceive(context: Context, intent: Intent) {
         // This method is called when the BroadcastReceiver is receiving an Intent broadcast.
         val downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)

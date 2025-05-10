@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -37,9 +36,9 @@ import com.wzvideni.floatinglyrics.viewmodel.PlayingStateViewModel
 // 歌词页面
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-inline fun LyricsPage(
+fun LyricsPage(
     playingStateViewModel: PlayingStateViewModel,
-    crossinline onClickToSave: (lyricList: List<Lyric>) -> Unit,
+    onClickToSave: (lyricList: List<Lyric>) -> Unit,
 ) {
     val lyricList by playingStateViewModel.lyricsList.collectAsState()
     val lyricListState = rememberLazyListState()
@@ -84,7 +83,7 @@ inline fun LyricsPage(
         } else {
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .padding(paddingValues),
                 state = lyricListState,
                 verticalArrangement = Arrangement.Center,
